@@ -2,9 +2,7 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Oswald, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import { Header } from "@/components/header"
-import { CartDrawer, CartFloatingButton } from "@/components/cart-drawer"
-import { CheckoutModal } from "@/components/checkout-modal"
+import { StorefrontShell } from "@/components/storefront-shell"
 import "./globals.css"
 
 const oswald = Oswald({
@@ -112,11 +110,9 @@ export default function RootLayout({
         <link rel="canonical" href="https://foodiewagon.de" />
       </head>
       <body className={`${oswald.variable} ${playfair.variable} font-sans antialiased`}>
-        <Header />
-        {children}
-        <CartDrawer />
-        <CartFloatingButton />
-        <CheckoutModal />
+        <StorefrontShell>
+          {children}
+        </StorefrontShell>
         <Analytics />
       </body>
     </html>
