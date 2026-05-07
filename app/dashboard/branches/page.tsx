@@ -2,19 +2,21 @@
 
 import { useState } from "react"
 import { useDashboardStore } from "@/lib/store/dashboard"
-import { Plus } from "iconoir-react"
+import { Plus, Trash } from "iconoir-react"
 import { t } from "@/lib/i18n/translations"
 
 export default function BranchesPage() {
     const branches = useDashboardStore((s) => s.managedBranches)
     const toggleBranchActive = useDashboardStore((s) => s.toggleBranchActive)
     const addBranch = useDashboardStore((s) => s.addBranch)
+    const deleteBranch = useDashboardStore((s) => s.deleteBranch)
     const language = useDashboardStore((s) => s.language)
     const [showAdd, setShowAdd] = useState(false)
     const [newName, setNewName] = useState("")
     const [newAddress, setNewAddress] = useState("")
     const [newPhone, setNewPhone] = useState("")
     const [newHours, setNewHours] = useState("")
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
     const handleAdd = () => {
         if (!newName.trim() || !newAddress.trim()) return
@@ -57,9 +59,18 @@ export default function BranchesPage() {
                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${branch.isActive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
                                 {branch.isActive ? `🟢 ${t("branches", "active", language)}` : `🔴 ${t("branches", "inactive", language)}`}
                             </span>
-                            <button onClick={() => toggleBranchActive(branch.id)} className="text-xs px-2 py-1 bg-secondary rounded-lg text-foreground hover:bg-secondary/80">
-                                {branch.isActive ? t("branches", "deactivate", language) : t("branches", "activate", language)}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => toggleBranchActive(branch.id)} className="text-xs px-2 py-1 bg-secondary rounded-lg text-foreground hover:bg-secondary/80">
+                                    {branch.isActive ? t("branches", "deactivate", language) : t("branches", "activate", language)}
+                                </button>
+                                <button
+                                    onClick={() => setConfirmDeleteId(branch.id)}
+                                    className="text-xs px-2 py-1 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 flex items-center gap-1"
+                                    aria-label={t("branches", "delete", language)}
+                                >
+                                    <Trash className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
                         </div>
                         <h3 className="text-sm font-bold text-foreground">{branch.name}</h3>
                         <p className="text-xs text-muted-foreground">{branch.address}</p>
@@ -68,6 +79,25 @@ export default function BranchesPage() {
                             <span className="text-xs text-muted-foreground">{t("branches", "todayOrders", language)}: {branch.todayOrders}</span>
                             <span className="text-xs text-muted-foreground">· {branch.todayRevenue.toFixed(2)}€</span>
                         </div>
+                        {confirmDeleteId === branch.id && (
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 space-y-2">
+                                <p className="text-xs text-red-300">{t("branches", "confirmDelete", language)}</p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => { deleteBranch(branch.id); setConfirmDeleteId(null) }}
+                                        className="text-xs px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                                    >
+                                        {t("branches", "delete", language)}
+                                    </button>
+                                    <button
+                                        onClick={() => setConfirmDeleteId(null)}
+                                        className="text-xs px-3 py-1 border border-border rounded-lg text-foreground"
+                                    >
+                                        {t("categories", "cancel", language)}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

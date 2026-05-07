@@ -10,19 +10,14 @@ We pledge to act and interact in ways that contribute to an open, welcoming, div
 
 ### Positive Behavior
 
-Examples of behavior that contributes to a positive environment:
-
 - Using welcoming and inclusive language
 - Being respectful of differing viewpoints and experiences
 - Gracefully accepting constructive criticism
 - Focusing on what is best for the community
 - Showing empathy towards other community members
-- Providing and gracefully receiving feedback
 - Accepting responsibility for mistakes and learning from them
 
 ### Unacceptable Behavior
-
-Examples of unacceptable behavior include:
 
 - The use of sexualized language or imagery
 - Trolling, insulting or derogatory comments, and personal or political attacks
@@ -46,11 +41,6 @@ This Code of Conduct applies within all project spaces, including:
 - Project communication channels
 - Public spaces when representing the project
 
-Examples of representing the project include:
-- Using an official project email address
-- Posting via official social media accounts
-- Acting as an appointed representative at events
-
 ## Enforcement
 
 ### Reporting
@@ -68,35 +58,35 @@ All project team members are obligated to respect the privacy and security of th
 
 ### Enforcement Guidelines
 
-Project maintainers will follow these Community Impact Guidelines in determining the consequences for any action they deem in violation of this Code of Conduct:
+Project maintainers will follow these Community Impact Guidelines:
 
 #### 1. Correction
 
-**Community Impact:** Use of inappropriate language or other behavior deemed unprofessional or unwelcome.
+**Community Impact:** Use of inappropriate language or unprofessional behavior.
 
-**Consequence:** A private, written warning, providing clarity around the nature of the violation and an explanation of why the behavior was inappropriate. A public apology may be requested.
+**Consequence:** A private, written warning with clarity around the nature of the violation.
 
 #### 2. Warning
 
 **Community Impact:** A violation through a single incident or series of actions.
 
-**Consequence:** A warning with consequences for continued behavior. No interaction with the people involved for a specified period. This includes avoiding interactions in community spaces as well as external channels. Violating these terms may lead to a temporary or permanent ban.
+**Consequence:** A warning with consequences for continued behavior. No interaction with the people involved for a specified period.
 
 #### 3. Temporary Ban
 
-**Community Impact:** A serious violation of community standards, including sustained inappropriate behavior.
+**Community Impact:** A serious violation of community standards.
 
-**Consequence:** A temporary ban from any sort of interaction or public communication with the community for a specified period. No public or private interaction with the people involved is allowed during this period. Violating these terms may lead to a permanent ban.
+**Consequence:** A temporary ban from any interaction with the community for a specified period.
 
 #### 4. Permanent Ban
 
-**Community Impact:** Demonstrating a pattern of violation of community standards, including sustained inappropriate behavior, harassment of an individual, or aggression toward or disparagement of classes of individuals.
+**Community Impact:** Demonstrating a pattern of violation of community standards.
 
-**Consequence:** A permanent ban from any sort of public interaction within the community.
+**Consequence:** A permanent ban from any public interaction within the community.
 
 ## Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org/), version 2.1, available at https://www.contributor-covenant.org/version/2/1/code_of_conduct.html
+This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org/), version 2.1.
 
 Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcement ladder](https://github.com/mozilla/diversity).
 
@@ -107,7 +97,3 @@ If you have questions about this Code of Conduct, please contact:
 **FlavorBytes GmbH - The Foodie Wagon**
 Email: flavor.bytes.gmbh@gmail.com
 Phone: +49 176 22245627
-
----
-
-**Last Updated:** December 2025

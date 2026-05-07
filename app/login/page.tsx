@@ -3,11 +3,12 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { sanitizeEmail, sanitizeText, isValidEmail, generateSessionId } from "@/lib/utils/sanitize"
+import { isSupabaseConfigured, getSupabase } from "@/lib/supabase/client"
 
 const ADMIN_EMAIL = "owner@platform.com"
 const ADMIN_PASS_HASH = "owner123"
-const RESTAURANT_EMAIL = "admin@foodiewagon.de"
-const RESTAURANT_PASS_HASH = "admin123"
+const RESTAURANT_EMAIL_FALLBACK = "admin@foodiewagon.de"
+const RESTAURANT_PASS_FALLBACK = "admin123"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -52,9 +53,9 @@ export default function LoginPage() {
             return
         }
 
-        await new Promise((r) => setTimeout(r, 500))
-
+        // Super admin (platform owner) — always uses fallback (no Supabase row)
         if (cleanEmail === ADMIN_EMAIL && password === ADMIN_PASS_HASH) {
+            await new Promise((r) => setTimeout(r, 300))
             const sessionId = generateSessionId()
             localStorage.setItem("role", "super_admin")
             localStorage.setItem("email", cleanEmail)
@@ -64,7 +65,42 @@ export default function LoginPage() {
             return
         }
 
-        if (cleanEmail === RESTAURANT_EMAIL && password === RESTAURANT_PASS_HASH) {
+        // Restaurant admin — try Supabase first, fall back to local
+        if (isSupabaseConfigured) {
+            try {
+                const { data, error: authError } = await getSupabase().auth.signInWithPassword({
+                    email: cleanEmail,
+                    password,
+                })
+                if (authError || !data.session) {
+                    setError(authError?.message || "Ungültige Anmeldedaten")
+                    setLoading(false)
+                    return
+                }
+                const status = getRestaurantStatus(cleanEmail)
+                if (!status.active) {
+                    await getSupabase().auth.signOut()
+                    setSuspendedInfo({ note: status.note })
+                    setLoading(false)
+                    return
+                }
+                const sessionId = generateSessionId()
+                localStorage.setItem("role", "restaurant_admin")
+                localStorage.setItem("email", cleanEmail)
+                localStorage.setItem("sessionId", sessionId)
+                router.push("/dashboard/overview")
+                setLoading(false)
+                return
+            } catch (err) {
+                setError(err instanceof Error ? err.message : "Anmeldung fehlgeschlagen")
+                setLoading(false)
+                return
+            }
+        }
+
+        // Fallback when Supabase is not configured (local-only demo mode)
+        await new Promise((r) => setTimeout(r, 300))
+        if (cleanEmail === RESTAURANT_EMAIL_FALLBACK && password === RESTAURANT_PASS_FALLBACK) {
             const status = getRestaurantStatus(cleanEmail)
             if (!status.active) {
                 setSuspendedInfo({ note: status.note })

@@ -7,6 +7,29 @@ import { broadcastEvent } from "@/lib/hooks/use-realtime-sync"
 import { branches } from "@/lib/config/branches"
 import { type Language } from "@/lib/i18n/translations"
 import { type StorefrontLang } from "@/lib/i18n/storefront"
+import { isSupabaseConfigured } from "@/lib/supabase/client"
+import {
+    fetchProducts,
+    fetchCategories,
+    fetchBranches,
+    fetchOrders,
+    fetchSettings,
+    insertProduct,
+    updateProductRow,
+    deleteProductRow,
+    insertCategory,
+    updateCategoryRow,
+    deleteCategoryRow,
+    insertBranch,
+    updateBranchRow,
+    deleteBranchRow,
+    insertOrder,
+    updateOrderRow,
+    deleteOrderRow,
+    generateLocalOrderNumber,
+    insertOrderSafe,
+    updateSettingsRow,
+} from "@/lib/supabase/queries"
 
 export type OrderStatus = "new" | "preparing" | "ready" | "delivered" | "cancelled"
 export type OrderType = "pickup" | "delivery"
@@ -272,17 +295,25 @@ const defaultSubscriptions: Subscription[] = [
 ]
 
 interface DashboardState {
+    isHydrated: boolean
+    setHydrated: (v: boolean) => void
+    loadFromRemote: () => Promise<void>
+
     orders: Order[]
     addOrder: (order: Omit<Order, "id" | "orderNumber" | "createdAt" | "timeline">) => Order
     updateOrderStatus: (id: string, status: OrderStatus) => void
     deleteOrder: (id: string) => void
     updateOrder: (id: string, data: Partial<Order>) => void
+    upsertOrderRemote: (order: Order) => void
+    removeOrderRemote: (id: string) => void
 
     products: ManagedProduct[]
     addProduct: (product: Omit<ManagedProduct, "id">) => void
     updateProduct: (id: string, data: Partial<ManagedProduct>) => void
     deleteProduct: (id: string) => void
     toggleProductActive: (id: string) => void
+    upsertProductRemote: (product: ManagedProduct) => void
+    removeProductRemote: (id: string) => void
 
     managedCategories: ManagedCategory[]
     updateCategory: (id: string, data: Partial<ManagedCategory>) => void
@@ -290,14 +321,20 @@ interface DashboardState {
     deleteCategory: (id: string) => void
     toggleCategoryVisibility: (id: string) => void
     recalcCategoryCounts: () => void
+    upsertCategoryRemote: (category: ManagedCategory) => void
+    removeCategoryRemote: (id: string) => void
 
     managedBranches: ManagedBranch[]
     updateBranch: (id: string, data: Partial<ManagedBranch>) => void
     addBranch: (branch: Omit<ManagedBranch, "id" | "todayOrders" | "todayRevenue">) => void
     toggleBranchActive: (id: string) => void
+    deleteBranch: (id: string) => void
+    upsertBranchRemote: (branch: ManagedBranch) => void
+    removeBranchRemote: (id: string) => void
 
     settings: RestaurantSettings
     updateSettings: (data: Partial<RestaurantSettings>) => void
+    setSettingsRemote: (settings: RestaurantSettings) => void
 
     restaurants: Restaurant[]
     subscriptions: Subscription[]
@@ -325,18 +362,71 @@ interface DashboardState {
     getRecentOrders: (count: number) => Order[]
 }
 
+// Fire-and-forget remote write helper
+function fireRemote(promise: Promise<unknown>) {
+    promise.catch((err) => {
+        if (typeof console === "undefined") return
+        const e = err as { message?: string; code?: string; details?: string; hint?: string }
+        const msg = e?.message || JSON.stringify(err)
+        const code = e?.code ? ` [${e.code}]` : ""
+        const hint = e?.hint ? ` — ${e.hint}` : ""
+        const details = e?.details ? ` (${e.details})` : ""
+        const isAuthError = e?.code === "42501" || /row-level security|RLS|JWT|permission denied/i.test(msg)
+        if (isAuthError) {
+            console.warn(
+                `[Supabase] Schreibvorgang abgelehnt — du bist nicht als Admin eingeloggt. Bitte unter /login anmelden, damit Änderungen gespeichert werden.${code}${details}${hint}`
+            )
+        } else {
+            console.error(`[Supabase] Remote write failed${code}: ${msg}${details}${hint}`)
+        }
+    })
+}
+
 export const useDashboardStore = create<DashboardState>()(
     persist(
         (set, get) => ({
+            isHydrated: false,
+            setHydrated: (v) => set({ isHydrated: v }),
+
+            loadFromRemote: async () => {
+                if (!isSupabaseConfigured) {
+                    set({ isHydrated: true })
+                    return
+                }
+                try {
+                    const [products, orders, branches, settings] = await Promise.all([
+                        fetchProducts(),
+                        fetchOrders(),
+                        fetchBranches(),
+                        fetchSettings(),
+                    ])
+
+                    const counts: Record<string, number> = {}
+                    for (const p of products) counts[p.categoryId] = (counts[p.categoryId] || 0) + 1
+                    const cats = await fetchCategories(counts)
+
+                    set({
+                        products,
+                        orders,
+                        managedBranches: branches.length > 0 ? branches : get().managedBranches,
+                        managedCategories: cats.length > 0 ? cats : get().managedCategories,
+                        settings: settings || get().settings,
+                        isHydrated: true,
+                    })
+                } catch (err) {
+                    console.error("[Supabase] Failed to load from remote:", err)
+                    set({ isHydrated: true })
+                }
+            },
+
             orders: [],
 
             addOrder: (orderData) => {
                 const state = get()
-                const orderNum = state.orders.length + 1
                 const newOrder: Order = {
                     ...orderData,
                     id: `order-${Date.now()}`,
-                    orderNumber: `FW-${String(orderNum).padStart(4, "0")}`,
+                    orderNumber: generateLocalOrderNumber(),
                     createdAt: new Date().toISOString(),
                     timeline: [{ status: orderData.status || "new", time: new Date().toISOString() }],
                 }
@@ -358,23 +448,30 @@ export const useDashboardStore = create<DashboardState>()(
                     }
                 }
 
+                if (isSupabaseConfigured) {
+                    fireRemote(insertOrder(newOrder))
+                }
+
                 return newOrder
             },
 
             updateOrderStatus: (id, status) => {
+                const updated = get().orders.find((o) => o.id === id)
+                if (!updated) return
+                const newTimeline = [...updated.timeline, { status, time: new Date().toISOString() }]
                 set({
                     orders: get().orders.map((o) =>
-                        o.id === id
-                            ? { ...o, status, timeline: [...o.timeline, { status, time: new Date().toISOString() }] }
-                            : o
+                        o.id === id ? { ...o, status, timeline: newTimeline } : o
                     ),
                 })
                 broadcastEvent({ type: "ORDER_UPDATED" })
+                fireRemote(updateOrderRow(id, { status, timeline: newTimeline }))
             },
 
             deleteOrder: (id) => {
                 set({ orders: get().orders.filter((o) => o.id !== id) })
                 broadcastEvent({ type: "ORDER_DELETED" })
+                fireRemote(deleteOrderRow(id))
             },
 
             updateOrder: (id, data) => {
@@ -382,6 +479,20 @@ export const useDashboardStore = create<DashboardState>()(
                     orders: get().orders.map((o) => (o.id === id ? { ...o, ...data } : o)),
                 })
                 broadcastEvent({ type: "ORDER_UPDATED" })
+                fireRemote(updateOrderRow(id, data))
+            },
+
+            upsertOrderRemote: (order) => {
+                const exists = get().orders.some((o) => o.id === order.id)
+                if (exists) {
+                    set({ orders: get().orders.map((o) => (o.id === order.id ? order : o)) })
+                } else {
+                    set({ orders: [order, ...get().orders] })
+                }
+            },
+
+            removeOrderRemote: (id) => {
+                set({ orders: get().orders.filter((o) => o.id !== id) })
             },
 
             products: createInitialProducts(),
@@ -393,6 +504,7 @@ export const useDashboardStore = create<DashboardState>()(
                 }
                 set({ products: [...get().products, newProduct] })
                 get().recalcCategoryCounts()
+                fireRemote(insertProduct(newProduct))
             },
 
             updateProduct: (id, data) => {
@@ -400,17 +512,38 @@ export const useDashboardStore = create<DashboardState>()(
                     products: get().products.map((p) => (p.id === id ? { ...p, ...data } : p)),
                 })
                 get().recalcCategoryCounts()
+                fireRemote(updateProductRow(id, data))
             },
 
             deleteProduct: (id) => {
                 set({ products: get().products.filter((p) => p.id !== id) })
                 get().recalcCategoryCounts()
+                fireRemote(deleteProductRow(id))
             },
 
             toggleProductActive: (id) => {
+                const product = get().products.find((p) => p.id === id)
+                if (!product) return
+                const newActive = !product.isActive
                 set({
-                    products: get().products.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p)),
+                    products: get().products.map((p) => (p.id === id ? { ...p, isActive: newActive } : p)),
                 })
+                fireRemote(updateProductRow(id, { isActive: newActive }))
+            },
+
+            upsertProductRemote: (product) => {
+                const exists = get().products.some((p) => p.id === product.id)
+                if (exists) {
+                    set({ products: get().products.map((p) => (p.id === product.id ? product : p)) })
+                } else {
+                    set({ products: [...get().products, product] })
+                }
+                get().recalcCategoryCounts()
+            },
+
+            removeProductRemote: (id) => {
+                set({ products: get().products.filter((p) => p.id !== id) })
+                get().recalcCategoryCounts()
             },
 
             managedCategories: createInitialCategories(),
@@ -419,13 +552,20 @@ export const useDashboardStore = create<DashboardState>()(
                 set({
                     managedCategories: get().managedCategories.map((c) => (c.id === id ? { ...c, ...data } : c)),
                 })
+                fireRemote(updateCategoryRow(id, data))
             },
 
             addCategory: (name) => {
-                const id = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
-                set({
-                    managedCategories: [...get().managedCategories, { id: `cat-${id}-${Date.now()}`, name, labelAr: name, isVisible: true, productCount: 0 }],
-                })
+                const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+                const newCat: ManagedCategory = {
+                    id: `cat-${slug}-${Date.now()}`,
+                    name,
+                    labelAr: name,
+                    isVisible: true,
+                    productCount: 0,
+                }
+                set({ managedCategories: [...get().managedCategories, newCat] })
+                fireRemote(insertCategory(newCat))
             },
 
             deleteCategory: (id) => {
@@ -434,14 +574,19 @@ export const useDashboardStore = create<DashboardState>()(
                     products: get().products.filter((p) => p.categoryId !== id),
                 })
                 get().recalcCategoryCounts()
+                fireRemote(deleteCategoryRow(id))
             },
 
             toggleCategoryVisibility: (id) => {
+                const category = get().managedCategories.find((c) => c.id === id)
+                if (!category) return
+                const newVisible = !category.isVisible
                 set({
                     managedCategories: get().managedCategories.map((c) =>
-                        c.id === id ? { ...c, isVisible: !c.isVisible } : c
+                        c.id === id ? { ...c, isVisible: newVisible } : c
                     ),
                 })
+                fireRemote(updateCategoryRow(id, { isVisible: newVisible }))
             },
 
             recalcCategoryCounts: () => {
@@ -454,12 +599,27 @@ export const useDashboardStore = create<DashboardState>()(
                 })
             },
 
+            upsertCategoryRemote: (category) => {
+                const exists = get().managedCategories.some((c) => c.id === category.id)
+                if (exists) {
+                    set({ managedCategories: get().managedCategories.map((c) => (c.id === category.id ? { ...c, ...category, productCount: c.productCount } : c)) })
+                } else {
+                    set({ managedCategories: [...get().managedCategories, category] })
+                }
+                get().recalcCategoryCounts()
+            },
+
+            removeCategoryRemote: (id) => {
+                set({ managedCategories: get().managedCategories.filter((c) => c.id !== id) })
+            },
+
             managedBranches: createInitialBranches(),
 
             updateBranch: (id, data) => {
                 set({
                     managedBranches: get().managedBranches.map((b) => (b.id === id ? { ...b, ...data } : b)),
                 })
+                fireRemote(updateBranchRow(id, data))
             },
 
             addBranch: (branchData) => {
@@ -470,21 +630,50 @@ export const useDashboardStore = create<DashboardState>()(
                     todayRevenue: 0,
                 }
                 set({ managedBranches: [...get().managedBranches, newBranch] })
+                fireRemote(insertBranch(newBranch))
             },
 
             toggleBranchActive: (id) => {
+                const branch = get().managedBranches.find((b) => b.id === id)
+                if (!branch) return
+                const newActive = !branch.isActive
                 set({
                     managedBranches: get().managedBranches.map((b) =>
-                        b.id === id ? { ...b, isActive: !b.isActive } : b
+                        b.id === id ? { ...b, isActive: newActive } : b
                     ),
                 })
+                fireRemote(updateBranchRow(id, { isActive: newActive }))
+            },
+
+            deleteBranch: (id) => {
+                set({ managedBranches: get().managedBranches.filter((b) => b.id !== id) })
+                fireRemote(deleteBranchRow(id))
+            },
+
+            removeBranchRemote: (id) => {
+                set({ managedBranches: get().managedBranches.filter((b) => b.id !== id) })
+            },
+
+            upsertBranchRemote: (branch) => {
+                const exists = get().managedBranches.some((b) => b.id === branch.id)
+                if (exists) {
+                    set({ managedBranches: get().managedBranches.map((b) => (b.id === branch.id ? { ...b, ...branch, todayOrders: b.todayOrders, todayRevenue: b.todayRevenue } : b)) })
+                } else {
+                    set({ managedBranches: [...get().managedBranches, branch] })
+                }
             },
 
             settings: defaultSettings,
 
             updateSettings: (data) => {
-                set({ settings: { ...get().settings, ...data } })
+                const newSettings = { ...get().settings, ...data }
+                set({ settings: newSettings })
                 broadcastEvent({ type: "SETTINGS_CHANGED" })
+                fireRemote(updateSettingsRow(newSettings))
+            },
+
+            setSettingsRemote: (settings) => {
+                set({ settings })
             },
 
             language: "de" as Language,
@@ -700,7 +889,7 @@ export const useDashboardStore = create<DashboardState>()(
         }),
         {
             name: "foodie-wagon-dashboard",
-            version: 4,
+            version: 5,
             migrate: (persistedState: unknown) => {
                 const state = persistedState as Record<string, unknown>
 

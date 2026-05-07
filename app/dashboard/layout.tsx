@@ -37,6 +37,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     useRealtimeSync()
     useOrderNotifications()
 
+    // استطلاع دوري للطلبات الجديدة من Supabase (كل 10 ثوانٍ)
+    useEffect(() => {
+        if (!authed) return
+        const loadFromRemote = useDashboardStore.getState().loadFromRemote
+        const interval = setInterval(() => {
+            loadFromRemote()
+        }, 10000)
+        return () => clearInterval(interval)
+    }, [authed])
+
     // تطبيق المظهر والـ RTL
     useEffect(() => {
         setMounted(true)

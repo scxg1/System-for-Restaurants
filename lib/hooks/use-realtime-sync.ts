@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef } from "react"
 import { useDashboardStore } from "@/lib/store/dashboard"
+import { isSupabaseConfigured } from "@/lib/supabase/client"
 
 // ===== قنوات البث =====
 type BroadcastEvent = {
@@ -28,75 +29,27 @@ export function broadcastEvent(event: BroadcastEvent): void {
     }
 }
 
-// ===== هوك الاستماع للتحديثات =====
 export function useRealtimeSync() {
     const store = useDashboardStore
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-    // إعادة قراءة البيانات من localStorage (عند التبديل بين التبويبات)
-    const rehydrate = useCallback(() => {
-        try {
-            const raw = localStorage.getItem("foodie-wagon-dashboard")
-            if (raw) {
-                const parsed = JSON.parse(raw)
-                const currentState = store.getState()
-
-                // مقارنة عدد الطلبات — إذا تغير، نعيد التحميل
-                if (parsed.state?.orders?.length !== currentState.orders.length) {
-                    // Zustand persist يوفر rehydrate function
-                    // لكننا نستخدم طريقة أبسط: مقارنة بسيطة
-                    store.persist.rehydrate()
-                }
-            }
-        } catch {
-            // تجاهل الأخطاء
-        }
-    }, [store])
+    const loadFromRemote = useDashboardStore((s) => s.loadFromRemote)
 
     useEffect(() => {
-        // 1. الاستماع لـ BroadcastChannel (تبويبات مختلفة)
         const ch = new BroadcastChannel("foodie-wagon-sync")
-        ch.onmessage = (event: MessageEvent<BroadcastEvent>) => {
-            const data = event.data
-            if (data.type === "NEW_ORDER" || data.type === "ORDER_UPDATED" || data.type === "ORDER_DELETED") {
-                // إعادة تحديث الطلبات من localStorage
-                store.persist.rehydrate()
+        ch.onmessage = (ev: MessageEvent<BroadcastEvent>) => {
+            if (isSupabaseConfigured) {
+                const evt = ev.data
+                if (evt?.type === "NEW_ORDER" || evt?.type === "ORDER_UPDATED" || evt?.type === "ORDER_DELETED") {
+                    loadFromRemote()
+                    return
+                }
             }
-            if (data.type === "PRODUCT_CHANGED" || data.type === "SETTINGS_CHANGED" || data.type === "BRANCH_CHANGED") {
-                store.persist.rehydrate()
-            }
+            store.persist.rehydrate()
         }
-
-        // 2. الاستماع لـ storage event (للتبويبات القديمة)
-        const handleStorage = (e: StorageEvent) => {
-            if (e.key === "foodie-wagon-dashboard" && e.newValue) {
-                store.persist.rehydrate()
-            }
-        }
-        window.addEventListener("storage", handleStorage)
-
-        // 3. إعادة التحميل عند العودة للتبويب (visibility change)
-        const handleVisibility = () => {
-            if (document.visibilityState === "visible") {
-                rehydrate()
-            }
-        }
-        document.addEventListener("visibilitychange", handleVisibility)
-
-        // 4. تحديث دوري كل 30 ثانية للطلبات الحية
-        intervalRef.current = setInterval(() => {
-            if (document.visibilityState === "visible") {
-                rehydrate()
-            }
-        }, 30000)
 
         return () => {
             ch.close()
-            window.removeEventListener("storage", handleStorage)
-            document.removeEventListener("visibilitychange", handleVisibility)
-            if (intervalRef.current) clearInterval(intervalRef.current)
         }
-    }, [store, rehydrate])
+    }, [store, loadFromRemote])
 }
 
 // ===== هوك إشعارات الطلبات الجديدة =====
@@ -104,7 +57,7 @@ export function useOrderNotifications() {
     const orders = useDashboardStore((s) => s.orders)
     const notificationSound = useDashboardStore((s) => s.settings.notificationSound)
     const notificationBrowser = useDashboardStore((s) => s.settings.notificationBrowser)
-    const prevCountRef = useRef(orders.length)
+    const prevCountRef = useRef<number>(orders.length)
 
     useEffect(() => {
         const currentCount = orders.length

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { Oswald, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { StorefrontShell } from "@/components/storefront-shell"
+import { SupabaseSyncProvider } from "@/components/supabase-sync-provider"
 import "./globals.css"
 
 const oswald = Oswald({
@@ -110,9 +111,11 @@ export default function RootLayout({
         <link rel="canonical" href="https://foodiewagon.de" />
       </head>
       <body className={`${oswald.variable} ${playfair.variable} font-sans antialiased`}>
-        <StorefrontShell>
-          {children}
-        </StorefrontShell>
+        <SupabaseSyncProvider>
+          <StorefrontShell>
+            {children}
+          </StorefrontShell>
+        </SupabaseSyncProvider>
         <Analytics />
       </body>
     </html>

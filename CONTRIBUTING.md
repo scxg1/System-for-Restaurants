@@ -1,104 +1,106 @@
-# Contributing to The Foodie Wagon Website
+# Contributing to The Foodie Wagon
 
-Thank you for your interest in contributing to The Foodie Wagon website! We appreciate your support.
+Thank you for your interest in contributing to The Foodie Wagon platform!
 
-## 🍔 About This Project
+## About This Project
 
-This is the official website for The Foodie Wagon, a premium Halal food truck operating in Ingolstadt, Germany. The site is built with Next.js 16, React 19, and Tailwind CSS.
+This is the platform for The Foodie Wagon, a Halal food truck in Ingolstadt, Germany. The site is built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, Zustand 5, and Supabase.
 
-## 📋 Code of Conduct
+## Code of Conduct
 
 Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) to keep our community welcoming and respectful.
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ or 20+
-- pnpm (recommended) or npm
+- Node.js 18+
+- pnpm (recommended)
 - Git
+- A Supabase account (for full functionality)
 
 ### Setup
 
 1. Fork the repository
 2. Clone your fork:
-   \`\`\`bash
-   git clone https://github.com/YOUR_USERNAME/foodie-wagon.git
-   cd foodie-wagon
-   \`\`\`
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/System-for-Restaurants.git
+   cd System-for-Restaurants
+   ```
 
 3. Install dependencies:
-   \`\`\`bash
+   ```bash
    pnpm install
-   \`\`\`
+   ```
 
-4. Run the development server:
-   \`\`\`bash
+4. Set up environment variables (see [SETUP.md](SETUP.md))
+
+5. Run the development server:
+   ```bash
    pnpm dev
-   \`\`\`
+   ```
 
-5. Open [http://localhost:3000](http://localhost:3000)
+6. Open [http://localhost:3000](http://localhost:3000)
 
-## 🛠️ Development Workflow
+## Development Workflow
 
 ### Branch Naming
 
-- `feature/description` - New features
-- `fix/description` - Bug fixes
-- `docs/description` - Documentation updates
-- `refactor/description` - Code refactoring
-- `style/description` - UI/styling changes
+- `feature/description` — New features
+- `fix/description` — Bug fixes
+- `docs/description` — Documentation updates
+- `refactor/description` — Code refactoring
+- `style/description` — UI/styling changes
 
 ### Commit Messages
 
 Follow conventional commits:
 
-\`\`\`
+```
 feat: add new menu item component
 fix: correct pricing display on mobile
 docs: update README with setup instructions
 style: improve hero section spacing
 refactor: optimize menu category rendering
-\`\`\`
+```
 
 ### Making Changes
 
 1. Create a new branch:
-   \`\`\`bash
+   ```bash
    git checkout -b feature/your-feature-name
-   \`\`\`
+   ```
 
 2. Make your changes
 
 3. Test your changes:
-   \`\`\`bash
+   ```bash
    pnpm run build
    pnpm run lint
-   \`\`\`
+   ```
 
 4. Commit your changes:
-   \`\`\`bash
+   ```bash
    git add .
    git commit -m "feat: your descriptive commit message"
-   \`\`\`
+   ```
 
 5. Push to your fork:
-   \`\`\`bash
+   ```bash
    git push origin feature/your-feature-name
-   \`\`\`
+   ```
 
 6. Open a Pull Request
 
-## 📝 Pull Request Guidelines
+## Pull Request Guidelines
 
 ### Before Submitting
 
-- [ ] Code builds without errors (`pnpm run build`)
-- [ ] All existing functionality still works
-- [ ] New features are documented
-- [ ] Follows existing code style
-- [ ] Responsive design tested (mobile, tablet, desktop)
-- [ ] Accessibility considered (WCAG guidelines)
+- Code builds without errors (`pnpm run build`)
+- All existing functionality still works
+- New features are documented
+- Follows existing code style
+- Responsive design tested (mobile, tablet, desktop)
 
 ### PR Description Should Include
 
@@ -107,37 +109,12 @@ refactor: optimize menu category rendering
 - Screenshots (for UI changes)
 - Related issue numbers (if applicable)
 
-### Example PR Template
-
-\`\`\`markdown
-## Description
-Brief description of changes
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Refactoring
-
-## Testing
-How were these changes tested?
-
-## Screenshots
-(if applicable)
-
-## Checklist
-- [ ] My code follows the project's style guidelines
-- [ ] I have tested these changes
-- [ ] I have updated documentation as needed
-\`\`\`
-
-## 🎨 Code Style Guidelines
+## Code Style Guidelines
 
 ### TypeScript/React
 
 - Use functional components with TypeScript
 - Prefer `const` over `let`
-- Use arrow functions
 - Implement proper TypeScript types (avoid `any`)
 - Use meaningful variable names
 
@@ -145,20 +122,22 @@ How were these changes tested?
 
 - Use Tailwind utility classes
 - Follow mobile-first responsive design
-- Maintain consistent spacing (4, 8, 12, 16, etc.)
+- Maintain consistent spacing
 - Use theme colors from `globals.css`
 
 ### File Organization
 
-\`\`\`
-/app                  # Next.js app router pages
-/components           # Reusable components
-/public              # Static assets
-  /graphics          # SVG graphics and images
-  /burgers           # Product images
-\`\`\`
+```
+/app                  # Next.js App Router pages and layouts
+/components           # Reusable UI components
+/components/dashboard # Dashboard-specific components
+/lib                  # Utilities, stores, hooks, config
+/lib/supabase         # Supabase client, queries, mappers
+/public               # Static assets (images, graphics)
+/supabase             # Database schema and migrations
+```
 
-## 🐛 Reporting Bugs
+## Reporting Bugs
 
 ### Before Reporting
 
@@ -168,15 +147,14 @@ How were these changes tested?
 
 ### Bug Report Template
 
-\`\`\`markdown
+```
 **Description**
 Clear description of the bug
 
 **Steps to Reproduce**
 1. Go to '...'
 2. Click on '...'
-3. Scroll down to '...'
-4. See error
+3. See error
 
 **Expected Behavior**
 What should happen
@@ -187,69 +165,33 @@ What actually happens
 **Environment**
 - Browser: [e.g. Chrome 120]
 - Device: [e.g. iPhone 12, Desktop]
-- OS: [e.g. iOS 17, Windows 11]
+```
 
-**Screenshots**
-(if applicable)
-\`\`\`
-
-## 💡 Suggesting Features
+## Suggesting Features
 
 We welcome feature suggestions! Please:
 
 1. Check if the feature has already been suggested
 2. Explain the use case clearly
 3. Describe how it would benefit users
-4. Consider implementation complexity
 
-### Feature Request Template
+## Areas We Need Help With
 
-\`\`\`markdown
-**Feature Description**
-Clear description of the proposed feature
+- Performance optimization
+- Accessibility improvements
+- SEO enhancements
+- German/Arabic language translations
+- Mobile responsiveness
+- Testing and bug reports
 
-**Problem It Solves**
-What problem does this address?
+## Legal
 
-**Proposed Solution**
-How would this feature work?
+By contributing, you agree that your contributions will be licensed under the MIT License.
 
-**Alternatives Considered**
-Other approaches you've thought about
-
-**Additional Context**
-Screenshots, mockups, examples
-\`\`\`
-
-## 🔍 Review Process
-
-1. PRs are reviewed by maintainers
-2. Feedback will be provided within 2-3 business days
-3. Address review comments
-4. Once approved, changes will be merged
-5. Your contribution will be credited
-
-## 📜 Legal
-
-By contributing, you agree that your contributions will be licensed under the MIT License. You also confirm that you have the right to submit your contributions.
-
-## 🙏 Recognition
-
-All contributors will be acknowledged in the README.md file.
-
-## 📞 Contact
+## Contact
 
 For questions about contributing:
 - Email: flavor.bytes.gmbh@gmail.com
 - Phone: +49 176 22245627
 
-## 🎯 Areas We Need Help
-
-- Performance optimization
-- Accessibility improvements
-- SEO enhancements
-- German language translations/corrections
-- Mobile responsiveness
-- Testing and bug reports
-
-Thank you for contributing to The Foodie Wagon! 🍔🚚
+Thank you for contributing to The Foodie Wagon!

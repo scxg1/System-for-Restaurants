@@ -137,6 +137,8 @@ const translations = {
         deactivate: { de: "Deaktivieren", ar: "تعطيل" },
         activate: { de: "Aktivieren", ar: "تفعيل" },
         addBranch: { de: "+ Filiale hinzufügen", ar: "+ إضافة فرع" },
+        delete: { de: "Löschen", ar: "حذف" },
+        confirmDelete: { de: "Filiale wirklich löschen?", ar: "هل تريد حذف الفرع فعلاً؟" },
     },
     // العملاء
     customers: {
@@ -193,6 +195,22 @@ const translations = {
         whatsappNumber: { de: "WhatsApp Nummer", ar: "رقم واتساب" },
         darkMode: { de: "Dunkelmodus", ar: "الوضع الليلي" },
         lightMode: { de: "Hellmodus", ar: "الوضع النهاري" },
+        // Labels for info tab
+        name: { de: "Name", ar: "الاسم" },
+        description: { de: "Beschreibung", ar: "الوصف" },
+        address: { de: "Adresse", ar: "العنوان" },
+        phone: { de: "Telefon", ar: "الهاتف" },
+        email: { de: "E-Mail", ar: "البريد الإلكتروني" },
+        website: { de: "Webseite", ar: "الموقع" },
+        instagram: { de: "Instagram", ar: "إنستغرام" },
+        whatsapp: { de: "WhatsApp", ar: "واتساب" },
+        // Menü Deal section
+        menuDealHeader: { de: "Menü Deal Banner", ar: "بانر عرض الوجبة" },
+        dealTitleDe: { de: "Deal Titel (DE)", ar: "عنوان العرض (ألماني)" },
+        dealTitleAr: { de: "Deal Titel (AR)", ar: "عنوان العرض (عربي)" },
+        dealDescDe: { de: "Deal Beschreibung (DE)", ar: "وصف العرض (ألماني)" },
+        dealDescAr: { de: "Deal Beschreibung (AR)", ar: "وصف العرض (عربي)" },
+        storefrontLanguage: { de: "Storefront Sprache", ar: "لغة واجهة المتجر" },
     },
     // عام
     common: {

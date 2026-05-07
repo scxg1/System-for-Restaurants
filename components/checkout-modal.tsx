@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Xmark, MapPin, Phone, User, Truck, ShoppingBag, CheckCircle, Gps, EditPencil } from "iconoir-react"
+import { Xmark, MapPin, Phone, User, Truck, ShoppingBag, CheckCircle, Gps, EditPencil, ChatBubble } from "iconoir-react"
 import { useCartStore } from "@/lib/store/cart"
 import { useDashboardStore } from "@/lib/store/dashboard"
 import { st } from "@/lib/i18n/storefront"
@@ -21,8 +21,9 @@ export function CheckoutModal() {
     const [customerName, setCustomerName] = useState("")
     const [customerPhone, setCustomerPhone] = useState("")
     const [customerAddress, setCustomerAddress] = useState("")
+    const [customerNotes, setCustomerNotes] = useState("")
     const [paymentMethod, setPaymentMethod] = useState<"cash" | "online">("cash")
-    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null)
     const [isLocating, setIsLocating] = useState(false)
     const [locationError, setLocationError] = useState("")
     const [isEditingAddress, setIsEditingAddress] = useState(false)
@@ -45,10 +46,10 @@ export function CheckoutModal() {
         }
     }, [managedBranches, selectedBranch])
 
-    // Get user's GPS location - must be before any early returns (Rules of Hooks)
+    // Get user's GPS location with high accuracy
     const getUserLocation = useCallback(() => {
         if (!navigator.geolocation) {
-            setLocationError("Geolocation wird nicht unterstützt")
+            setLocationError(st("checkout.gpsNotSupported", lang))
             return
         }
         setIsLocating(true)
@@ -56,14 +57,15 @@ export function CheckoutModal() {
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
-                const { latitude: lat, longitude: lng } = position.coords
-                setUserLocation({ lat, lng })
+                const { latitude: lat, longitude: lng, accuracy } = position.coords
+                setUserLocation({ lat, lng, accuracy })
                 setIsLocating(false)
 
                 // Reverse geocode using Nominatim (free, no API key)
                 try {
+                    const acceptLang = lang === "ar" ? "ar,de" : "de"
                     const res = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=de`,
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18&accept-language=${acceptLang}`,
                         { headers: { "User-Agent": "TheFoodieWagon/1.0" } }
                     )
                     const data = await res.json()
@@ -80,21 +82,21 @@ export function CheckoutModal() {
                 setIsLocating(false)
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
-                        setLocationError("Standortzugriff wurde verweigert")
+                        setLocationError(st("checkout.gpsDenied", lang))
                         break
                     case error.POSITION_UNAVAILABLE:
-                        setLocationError("Standort nicht verfügbar")
+                        setLocationError(st("checkout.gpsUnavailable", lang))
                         break
                     case error.TIMEOUT:
-                        setLocationError("Zeitüberschreitung bei Standortsuche")
+                        setLocationError(st("checkout.gpsTimeout", lang))
                         break
                     default:
-                        setLocationError("Fehler bei Standortermittlung")
+                        setLocationError(st("checkout.gpsError", lang))
                 }
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         )
-    }, [])
+    }, [lang])
 
     if (!isOpen) return null
 
@@ -108,7 +110,6 @@ export function CheckoutModal() {
     }
 
     const handleConfirm = () => {
-        // Create order in dashboard store so it appears in the restaurant admin panel
         const orderItems = items.map((ci) => ({
             menuItemId: ci.item.id,
             name: ci.item.name,
@@ -118,10 +119,16 @@ export function CheckoutModal() {
         }))
 
         const selectedBranchData = activeBranches.find((b) => b.id === selectedBranch)
+        const fullAddress = orderType === "delivery"
+            ? userLocation
+                ? `${customerAddress}\n📍 ${userLocation.lat.toFixed(6)}, ${userLocation.lng.toFixed(6)}`
+                : customerAddress
+            : undefined
+
         addOrder({
             customerName,
             customerPhone,
-            customerAddress: orderType === "delivery" ? customerAddress : undefined,
+            customerAddress: fullAddress,
             items: orderItems,
             total: getTotalPrice(),
             status: "new",
@@ -130,7 +137,7 @@ export function CheckoutModal() {
             branchName: selectedBranchData?.name ?? "Hauptstandort",
             paymentMethod: paymentMethod === "cash" ? "cash" : "online",
             paymentStatus: "pending",
-            notes: "",
+            notes: customerNotes,
         })
 
         setStep("success")
@@ -138,10 +145,12 @@ export function CheckoutModal() {
         setCartOpen(false)
     }
 
+    const dirAttr = lang === "ar" ? "rtl" : "ltr"
+
     return (
         <>
             <div className="fixed inset-0 bg-black/70 z-[60]" onClick={handleClose} />
-            <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-[60] bg-card border border-border rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg z-[60] bg-card border border-border rounded-2xl overflow-hidden flex flex-col max-h-[90vh]" dir={dirAttr}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
                     <h2 className="text-xl font-black text-foreground">
@@ -167,13 +176,13 @@ export function CheckoutModal() {
                                     setOrderType("pickup")
                                     setStep("details")
                                 }}
-                                className={`w-full p-4 rounded-xl border-2 text-left transition-all ${orderType === "pickup"
+                                className={`w-full p-4 rounded-xl border-2 text-start transition-all ${orderType === "pickup"
                                     ? "border-primary bg-primary/10"
                                     : "border-border hover:border-primary/50"
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <ShoppingBag className="w-6 h-6 text-primary" />
+                                    <ShoppingBag className="w-6 h-6 text-primary flex-shrink-0" />
                                     <div>
                                         <p className="font-bold text-foreground">{st("checkout.pickup", lang)}</p>
                                         <p className="text-sm text-muted-foreground">
@@ -187,13 +196,13 @@ export function CheckoutModal() {
                                     setOrderType("delivery")
                                     setStep("details")
                                 }}
-                                className={`w-full p-4 rounded-xl border-2 text-left transition-all ${orderType === "delivery"
+                                className={`w-full p-4 rounded-xl border-2 text-start transition-all ${orderType === "delivery"
                                     ? "border-primary bg-primary/10"
                                     : "border-border hover:border-primary/50"
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <Truck className="w-6 h-6 text-primary" />
+                                    <Truck className="w-6 h-6 text-primary flex-shrink-0" />
                                     <div>
                                         <p className="font-bold text-foreground">{st("checkout.delivery", lang)}</p>
                                         <p className="text-sm text-muted-foreground">
@@ -213,7 +222,7 @@ export function CheckoutModal() {
                                         <button
                                             key={b.id}
                                             onClick={() => setSelectedBranch(b.id)}
-                                            className={`w-full p-3 rounded-xl border text-left text-sm transition-all ${selectedBranch === b.id
+                                            className={`w-full p-3 rounded-xl border text-start text-sm transition-all ${selectedBranch === b.id
                                                 ? "border-primary bg-primary/10"
                                                 : "border-border hover:border-primary/50"
                                                 }`}
@@ -243,7 +252,7 @@ export function CheckoutModal() {
                                         <button
                                             key={b.id}
                                             onClick={() => setSelectedBranch(b.id)}
-                                            className={`w-full p-2.5 rounded-lg border text-left text-sm transition-all ${selectedBranch === b.id
+                                            className={`w-full p-2.5 rounded-lg border text-start text-sm transition-all ${selectedBranch === b.id
                                                 ? "border-primary bg-primary/10"
                                                 : "border-border hover:border-primary/50"
                                                 }`}
@@ -259,23 +268,23 @@ export function CheckoutModal() {
 
                             <div className="space-y-3">
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                    <User className={`absolute ${lang === "ar" ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground`} />
                                     <input
                                         type="text"
                                         placeholder={st("checkout.yourName", lang)}
                                         value={customerName}
                                         onChange={(e) => setCustomerName(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                                        className={`w-full ${lang === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none`}
                                     />
                                 </div>
                                 <div className="relative">
-                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                                    <Phone className={`absolute ${lang === "ar" ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground`} />
                                     <input
                                         type="tel"
                                         placeholder={st("checkout.yourPhone", lang)}
                                         value={customerPhone}
                                         onChange={(e) => setCustomerPhone(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                                        className={`w-full ${lang === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none`}
                                     />
                                 </div>
                                 {orderType === "delivery" && (
@@ -284,15 +293,15 @@ export function CheckoutModal() {
                                         {!customerAddress && !isLocating && (
                                             <button
                                                 onClick={getUserLocation}
-                                                className="w-full p-4 rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 text-left hover:bg-primary/10 transition-all"
+                                                className="w-full p-4 rounded-xl border-2 border-dashed border-primary/50 bg-primary/5 text-start hover:bg-primary/10 transition-all"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                                                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                                                         <Gps className="w-5 h-5 text-primary" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-foreground text-sm">Standort automatisch ermitteln</p>
-                                                        <p className="text-xs text-muted-foreground">GPS verwenden, um Ihre Adresse zu finden</p>
+                                                        <p className="font-bold text-foreground text-sm">{st("checkout.gpsAuto", lang)}</p>
+                                                        <p className="text-xs text-muted-foreground">{st("checkout.gpsHint", lang)}</p>
                                                     </div>
                                                 </div>
                                             </button>
@@ -302,7 +311,7 @@ export function CheckoutModal() {
                                         {isLocating && (
                                             <div className="w-full p-4 rounded-xl border border-primary/30 bg-primary/5 flex items-center gap-3">
                                                 <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                                <span className="text-sm text-foreground font-medium">Standort wird ermittelt...</span>
+                                                <span className="text-sm text-foreground font-medium">{st("checkout.locating", lang)}</span>
                                             </div>
                                         )}
 
@@ -313,24 +322,32 @@ export function CheckoutModal() {
                                             </div>
                                         )}
 
-                                        {/* Map preview */}
+                                        {/* Map preview with accuracy info */}
                                         {userLocation && !isEditingAddress && (
-                                            <div className="rounded-xl overflow-hidden border border-border">
-                                                <iframe
-                                                    title="Standort"
-                                                    width="100%"
-                                                    height="150"
-                                                    style={{ border: 0 }}
-                                                    loading="lazy"
-                                                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${userLocation.lng - 0.003}%2C${userLocation.lat - 0.002}%2C${userLocation.lng + 0.003}%2C${userLocation.lat + 0.002}&layer=mapnik&marker=${userLocation.lat}%2C${userLocation.lng}`}
-                                                />
+                                            <div className="space-y-2">
+                                                <div className="rounded-xl overflow-hidden border border-border">
+                                                    <iframe
+                                                        title="Standort"
+                                                        width="100%"
+                                                        height="180"
+                                                        style={{ border: 0 }}
+                                                        loading="lazy"
+                                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${userLocation.lng - 0.002}%2C${userLocation.lat - 0.0015}%2C${userLocation.lng + 0.002}%2C${userLocation.lat + 0.0015}&layer=mapnik&marker=${userLocation.lat}%2C${userLocation.lng}`}
+                                                    />
+                                                </div>
+                                                {userLocation.accuracy !== undefined && (
+                                                    <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                                                        <span>📍 {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}</span>
+                                                        <span>{st("checkout.gpsAccuracy", lang)}: ±{Math.round(userLocation.accuracy)} m</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
                                         {/* Address field */}
                                         {customerAddress && (
                                             <div className="relative">
-                                                <MapPin className="absolute left-3 top-3 w-5 h-5 text-primary" />
+                                                <MapPin className={`absolute ${lang === "ar" ? "right-3" : "left-3"} top-3 w-5 h-5 text-primary`} />
                                                 {isEditingAddress ? (
                                                     <textarea
                                                         placeholder={st("checkout.deliveryAddress", lang)}
@@ -338,26 +355,20 @@ export function CheckoutModal() {
                                                         onChange={(e) => setCustomerAddress(e.target.value)}
                                                         rows={3}
                                                         autoFocus
-                                                        className="w-full pl-10 pr-10 py-3 bg-background border border-primary rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none resize-none text-sm"
+                                                        className={`w-full ${lang === "ar" ? "pr-10 pl-10" : "pl-10 pr-10"} py-3 bg-background border border-primary rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none resize-none text-sm`}
                                                     />
                                                 ) : (
                                                     <div
-                                                        className="w-full pl-10 pr-10 py-3 bg-background border border-border rounded-xl text-foreground text-sm cursor-pointer hover:border-primary/50"
+                                                        className={`w-full ${lang === "ar" ? "pr-10 pl-10" : "pl-10 pr-10"} py-3 bg-background border border-border rounded-xl text-foreground text-sm cursor-pointer hover:border-primary/50`}
                                                         onClick={() => setIsEditingAddress(true)}
                                                     >
                                                         <p className="leading-relaxed">{customerAddress}</p>
                                                     </div>
                                                 )}
                                                 <button
-                                                    onClick={() => {
-                                                        if (isEditingAddress) {
-                                                            setIsEditingAddress(false)
-                                                        } else {
-                                                            setIsEditingAddress(true)
-                                                        }
-                                                    }}
-                                                    className="absolute right-3 top-3 p-1 text-muted-foreground hover:text-primary transition-colors"
-                                                    title={isEditingAddress ? "Fertig" : "Bearbeiten"}
+                                                    onClick={() => setIsEditingAddress(!isEditingAddress)}
+                                                    className={`absolute ${lang === "ar" ? "left-3" : "right-3"} top-3 p-1 text-muted-foreground hover:text-primary transition-colors`}
+                                                    title={isEditingAddress ? st("checkout.doneEditing", lang) : st("checkout.editAddress", lang)}
                                                 >
                                                     <EditPencil className="w-4 h-4" />
                                                 </button>
@@ -371,7 +382,7 @@ export function CheckoutModal() {
                                                 className="text-xs text-primary hover:underline flex items-center gap-1"
                                             >
                                                 <Gps className="w-3 h-3" />
-                                                Standort neu ermitteln
+                                                {st("checkout.gpsRedo", lang)}
                                             </button>
                                         )}
 
@@ -385,12 +396,28 @@ export function CheckoutModal() {
                                                     }}
                                                     className="text-xs text-muted-foreground hover:text-primary transition-colors"
                                                 >
-                                                    oder Adresse manuell eingeben
+                                                    {st("checkout.manualAddress", lang)}
                                                 </button>
                                             </div>
                                         )}
                                     </div>
                                 )}
+
+                                {/* Notes field — works for both pickup & delivery */}
+                                <div className="relative">
+                                    <ChatBubble className={`absolute ${lang === "ar" ? "right-3" : "left-3"} top-3 w-5 h-5 text-muted-foreground`} />
+                                    <textarea
+                                        placeholder={st("checkout.notesHint", lang)}
+                                        value={customerNotes}
+                                        onChange={(e) => setCustomerNotes(e.target.value)}
+                                        rows={2}
+                                        maxLength={500}
+                                        className={`w-full ${lang === "ar" ? "pr-10 pl-4" : "pl-10 pr-4"} py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none resize-none text-sm`}
+                                    />
+                                    <p className={`text-xs text-muted-foreground mt-1 ${lang === "ar" ? "text-right" : "text-left"}`}>
+                                        {st("checkout.notesLabel", lang)}
+                                    </p>
+                                </div>
                             </div>
 
                             <div className="flex gap-3 pt-2">
@@ -402,7 +429,7 @@ export function CheckoutModal() {
                                 </button>
                                 <button
                                     onClick={() => setStep("summary")}
-                                    disabled={!customerName || !customerPhone}
+                                    disabled={!customerName || !customerPhone || (orderType === "delivery" && !customerAddress.trim())}
                                     className="flex-1 py-3 bg-primary text-primary-foreground font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {st("checkout.continue", lang)}
@@ -423,8 +450,13 @@ export function CheckoutModal() {
                                     {customerName} • {customerPhone}
                                 </p>
                                 {orderType === "delivery" && customerAddress && (
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-sm text-muted-foreground whitespace-pre-line">
                                         {customerAddress}
+                                    </p>
+                                )}
+                                {customerNotes && (
+                                    <p className="text-sm text-muted-foreground border-t border-border/50 pt-2 mt-2">
+                                        💬 {customerNotes}
                                     </p>
                                 )}
                             </div>
@@ -466,7 +498,7 @@ export function CheckoutModal() {
                                 <p className="text-sm font-bold text-foreground">{st("checkout.paymentMethod", lang)}</p>
                                 <button
                                     onClick={() => setPaymentMethod("cash")}
-                                    className={`w-full p-3 rounded-xl border text-left text-sm transition-all ${paymentMethod === "cash"
+                                    className={`w-full p-3 rounded-xl border text-start text-sm transition-all ${paymentMethod === "cash"
                                         ? "border-primary bg-primary/10"
                                         : "border-border hover:border-primary/50"
                                         }`}
@@ -475,12 +507,12 @@ export function CheckoutModal() {
                                 </button>
                                 <button
                                     onClick={() => setPaymentMethod("online")}
-                                    className={`w-full p-3 rounded-xl border text-left text-sm transition-all ${paymentMethod === "online"
+                                    className={`w-full p-3 rounded-xl border text-start text-sm transition-all ${paymentMethod === "online"
                                         ? "border-primary bg-primary/10"
                                         : "border-border hover:border-primary/50"
                                         }`}
                                 >
-                                    💳 {st("checkout.payment.online", lang)} (bald verfügbar)
+                                    💳 {st("checkout.payment.online", lang)} {st("checkout.payment.onlineSoon", lang)}
                                 </button>
                             </div>
 

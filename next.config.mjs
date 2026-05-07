@@ -5,7 +5,7 @@ const ContentSecurityPolicy = `
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: blob: https:;
     font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://nominatim.openstreetmap.org;
+    connect-src 'self' https://nominatim.openstreetmap.org https://*.supabase.co wss://*.supabase.co https://api.cloudinary.com https://res.cloudinary.com;
     frame-src https://www.openstreetmap.org;
     object-src 'none';
     base-uri 'self';
@@ -29,6 +29,7 @@ const nextConfig = {
         unoptimized: true,
         remotePatterns: [
             { protocol: "https", hostname: "nominatim.openstreetmap.org" },
+            { protocol: "https", hostname: "res.cloudinary.com" },
         ],
     },
     async headers() {

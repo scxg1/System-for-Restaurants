@@ -2,6 +2,11 @@ node_modules/
 .next/
 next-env.d.ts
 *.tsbuildinfo
-Menu/
-Veggi Burgers/
-siterefs/
+.env
+.env.local
+.env*.local
+.vercel
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

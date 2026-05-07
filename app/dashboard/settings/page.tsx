@@ -54,7 +54,7 @@ export default function SettingsPage() {
                 <div className="bg-card border border-border rounded-xl p-4 space-y-3">
                     {(["name", "description", "address", "phone", "email", "website", "instagram", "whatsapp"] as const).map((field) => (
                         <div key={field}>
-                            <label className="block text-xs font-medium text-muted-foreground mb-1">{field}</label>
+                            <label className="block text-xs font-medium text-muted-foreground mb-1">{t("settings", field, language)}</label>
                             <input type="text" value={settings[field]} onChange={(e) => save({ [field]: e.target.value })}
                                 className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
                         </div>
@@ -62,25 +62,25 @@ export default function SettingsPage() {
 
                     {/* MENÜ DEAL Section */}
                     <div className="pt-4 mt-4 border-t border-border">
-                        <h3 className="text-sm font-bold text-primary mb-3">Menü Deal Banner</h3>
+                        <h3 className="text-sm font-bold text-primary mb-3">{t("settings", "menuDealHeader", language)}</h3>
                         <div className="space-y-3">
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">Deal Title (DE)</label>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1">{t("settings", "dealTitleDe", language)}</label>
                                 <input type="text" value={settings.menuDealTitleDe} onChange={(e) => save({ menuDealTitleDe: e.target.value })}
                                     className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">Deal Title (AR)</label>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1">{t("settings", "dealTitleAr", language)}</label>
                                 <input type="text" value={settings.menuDealTitleAr} onChange={(e) => save({ menuDealTitleAr: e.target.value })}
                                     className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" dir="rtl" />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">Deal Description (DE)</label>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1">{t("settings", "dealDescDe", language)}</label>
                                 <input type="text" value={settings.menuDealDescDe} onChange={(e) => save({ menuDealDescDe: e.target.value })}
                                     className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-muted-foreground mb-1">Deal Description (AR)</label>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1">{t("settings", "dealDescAr", language)}</label>
                                 <input type="text" value={settings.menuDealDescAr} onChange={(e) => save({ menuDealDescAr: e.target.value })}
                                     className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" dir="rtl" />
                             </div>
@@ -252,7 +252,7 @@ export default function SettingsPage() {
 
                     {/* لغة واجهة المتجر */}
                     <div>
-                        <h3 className="text-sm font-medium text-foreground mb-3">Storefront Language / لغة واجهة المتجر</h3>
+                        <h3 className="text-sm font-medium text-foreground mb-3">{t("settings", "storefrontLanguage", language)}</h3>
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => setStorefrontLang("de")}

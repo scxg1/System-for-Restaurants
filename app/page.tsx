@@ -16,7 +16,7 @@ export default function Home() {
         "name": "The Foodie Wagon",
         "description": "Premium Halal Burger Food Truck in Ingolstadt - Hausgemachte Beef Patties, Fried Chicken, Currywurst und authentisches Street Food",
         "url": "https://foodiewagon.de",
-        "telephone": "+49-XXX-XXXXXXX",
+        "telephone": "+49 176 22245627",
         "servesCuisine": ["Burger", "Halal", "Street Food", "Fast Food", "American", "German"],
         "priceRange": "€€",
         "image": "https://foodiewagon.de/graphics/tasty burger.svg",
