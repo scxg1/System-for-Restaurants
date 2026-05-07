@@ -1,0 +1,218 @@
+// ترجمات لوحة التحكم - ألماني وعربي
+
+export type Language = "de" | "ar"
+
+const translations = {
+    // القائمة الجانبية
+    sidebar: {
+        overview: { de: "Übersicht", ar: "نظرة عامة" },
+        orders: { de: "Bestellungen", ar: "الطلبات" },
+        menu: { de: "Speisekarte", ar: "القائمة" },
+        categories: { de: "Kategorien", ar: "الفئات" },
+        branches: { de: "Filialen", ar: "الفروع" },
+        customers: { de: "Kunden", ar: "العملاء" },
+        reports: { de: "Berichte", ar: "التقارير" },
+        settings: { de: "Einstellungen", ar: "الإعدادات" },
+        logout: { de: "Abmelden", ar: "تسجيل الخروج" },
+    },
+    // شريط التحكم العلوي
+    topbar: {
+        today: { de: "Heute", ar: "اليوم" },
+        notifications: { de: "Benachrichtigungen", ar: "الإشعارات" },
+    },
+    // صفحة النظرة العامة
+    overview: {
+        title: { de: "Übersicht", ar: "نظرة عامة" },
+        ordersToday: { de: "Bestellungen heute", ar: "طلبات اليوم" },
+        revenueToday: { de: "Umsatz heute", ar: "إيرادات اليوم" },
+        avgOrder: { de: "Ø Bestellwert", ar: "متوسط الطلب" },
+        totalCustomers: { de: "Kunden gesamt", ar: "إجمالي العملاء" },
+        revenueChart: { de: "Umsatz der letzten 7 Tage", ar: "إيرادات آخر 7 أيام" },
+        recentOrders: { de: "Letzte Bestellungen", ar: "آخر الطلبات" },
+        topProducts: { de: "Top Produkte", ar: "أفضل المنتجات" },
+        liveOrders: { de: "Aktive Bestellungen", ar: "الطلبات النشطة" },
+        noOrders: { de: "Keine aktiven Bestellungen", ar: "لا توجد طلبات نشطة" },
+    },
+    // الطلبات
+    orders: {
+        title: { de: "Bestellungen", ar: "الطلبات" },
+        all: { de: "Alle", ar: "الكل" },
+        new: { de: "Neu", ar: "جديد" },
+        preparing: { de: "In Bearbeitung", ar: "قيد التحضير" },
+        ready: { de: "Bereit", ar: "جاهز" },
+        delivered: { de: "Geliefert", ar: "تم التوصيل" },
+        cancelled: { de: "Storniert", ar: "ملغي" },
+        search: { de: "Suche Bestellnr. oder Kunde...", ar: "بحث برقم الطلب أو العميل..." },
+        today: { de: "Heute", ar: "اليوم" },
+        thisWeek: { de: "Diese Woche", ar: "هذا الأسبوع" },
+        thisMonth: { de: "Dieser Monat", ar: "هذا الشهر" },
+        customer: { de: "Kunde", ar: "العميل" },
+        items: { de: "Artikel", ar: "العناصر" },
+        total: { de: "Gesamt", ar: "المجموع" },
+        branch: { de: "Filiale", ar: "الفرع" },
+        type: { de: "Typ", ar: "النوع" },
+        status: { de: "Status", ar: "الحالة" },
+        time: { de: "Zeit", ar: "الوقت" },
+        actions: { de: "Aktionen", ar: "الإجراءات" },
+        pickup: { de: "Abholung", ar: "استلام" },
+        delivery: { de: "Lieferung", ar: "توصيل" },
+        orderNumber: { de: "Bestellnr.", ar: "رقم الطلب" },
+        viewDetail: { de: "Details anzeigen", ar: "عرض التفاصيل" },
+        changeStatus: { de: "Status ändern", ar: "تغيير الحالة" },
+        printReceipt: { de: "Bon drucken", ar: "طباعة الإيصال" },
+        orderDetails: { de: "Bestelldetails", ar: "تفاصيل الطلب" },
+        customerInfo: { de: "Kundeninformationen", ar: "معلومات العميل" },
+        phone: { de: "Telefon", ar: "الهاتف" },
+        address: { de: "Adresse", ar: "العنوان" },
+        orderItems: { de: "Bestellte Artikel", ar: "العناصر المطلوبة" },
+        paymentMethod: { de: "Zahlungsmethode", ar: "طريقة الدفع" },
+        paymentStatus: { de: "Zahlungsstatus", ar: "حالة الدفع" },
+        notes: { de: "Notizen", ar: "ملاحظات" },
+        timeline: { de: "Verlaufszeit", ar: "الخط الزمني" },
+        cash: { de: "Bar", ar: "نقدي" },
+        online: { de: "Online", ar: "أونلاين" },
+        paid: { de: "Bezahlt", ar: "مدفوع" },
+        pending: { de: "Ausstehend", ar: "قيد الانتظار" },
+        updateStatus: { de: "Status aktualisieren", ar: "تحديث الحالة" },
+        back: { de: "Zurück", ar: "رجوع" },
+    },
+    // القائمة
+    menu: {
+        title: { de: "Speisekarte verwalten", ar: "إدارة القائمة" },
+        addProduct: { de: "+ Produkt hinzufügen", ar: "+ إضافة منتج" },
+        search: { de: "Produkte suchen...", ar: "بحث عن منتجات..." },
+        allCategories: { de: "Alle Kategorien", ar: "كل الفئات" },
+        name: { de: "Name", ar: "الاسم" },
+        category: { de: "Kategorie", ar: "الفئة" },
+        price: { de: "Preis", ar: "السعر" },
+        image: { de: "Bild", ar: "الصورة" },
+        active: { de: "Aktiv", ar: "نشط" },
+        inactive: { de: "Inaktiv", ar: "غير نشط" },
+        edit: { de: "Bearbeiten", ar: "تعديل" },
+        delete: { de: "Löschen", ar: "حذف" },
+        deleteConfirm: { de: "Produkt wirklich löschen?", ar: "هل تريد حذف المنتج فعلاً؟" },
+        deleteWarning: { de: "Dies kann nicht rückgängig gemacht werden.", ar: "لا يمكن التراجع عن هذا الإجراء." },
+        cancel: { de: "Abbrechen", ar: "إلغاء" },
+        save: { de: "Speichern", ar: "حفظ" },
+        newProduct: { de: "Neues Produkt", ar: "منتج جديد" },
+        editProduct: { de: "Produkt bearbeiten", ar: "تعديل المنتج" },
+        productName: { de: "Name *", ar: "الاسم *" },
+        description: { de: "Beschreibung", ar: "الوصف" },
+        sizes: { de: "Größen (optional)", ar: "الأحجام (اختياري)" },
+        addSize: { de: "+ Größe hinzufügen", ar: "+ إضافة حجم" },
+        sizeName: { de: "Name", ar: "الاسم" },
+        sizePrice: { de: "Preis", ar: "السعر" },
+        tags: { de: "Tags", ar: "العلامات" },
+        halal: { de: "Halal", ar: "حلال" },
+        vegetarian: { de: "Vegetarisch", ar: "نباتي" },
+        spicy: { de: "Scharf", ar: "حار" },
+        no: { de: "Nein", ar: "لا" },
+        imagePlaceholder: { de: "/burgers/beef/my-burger.webp", ar: "/burgers/beef/my-burger.webp" },
+        imageHelp: { de: "Lokaler Pfad oder URL", ar: "مسار محلي أو رابط" },
+        preview: { de: "Vorschau", ar: "معاينة" },
+    },
+    // الفئات
+    categories: {
+        title: { de: "Kategorien verwalten", ar: "إدارة الفئات" },
+        addCategory: { de: "+ Kategorie hinzufügen", ar: "+ إضافة فئة" },
+        addPlaceholder: { de: "Neue Kategorie...", ar: "فئة جديدة..." },
+        add: { de: "Hinzufügen", ar: "إضافة" },
+        name: { de: "Name", ar: "الاسم" },
+        products: { de: "Produkte", ar: "المنتجات" },
+        visible: { de: "Sichtbar", ar: "مرئي" },
+        hidden: { de: "Versteckt", ar: "مخفي" },
+        edit: { de: "Bearbeiten", ar: "تعديل" },
+        delete: { de: "Löschen", ar: "حذف" },
+        confirmDelete: { de: "Bestätigen?", ar: "تأكيد؟" },
+        save: { de: "Speichern", ar: "حفظ" },
+        cancel: { de: "Abbrechen", ar: "إلغاء" },
+    },
+    // الفروع
+    branches: {
+        title: { de: "Filialen verwalten", ar: "إدارة الفروع" },
+        active: { de: "AKTIV", ar: "نشط" },
+        inactive: { de: "INAKTIV", ar: "غير نشط" },
+        todayOrders: { de: "Bestellungen heute", ar: "طلبات اليوم" },
+        edit: { de: "Bearbeiten", ar: "تعديل" },
+        deactivate: { de: "Deaktivieren", ar: "تعطيل" },
+        activate: { de: "Aktivieren", ar: "تفعيل" },
+        addBranch: { de: "+ Filiale hinzufügen", ar: "+ إضافة فرع" },
+    },
+    // العملاء
+    customers: {
+        title: { de: "Kunden", ar: "العملاء" },
+        search: { de: "Suche Name oder Telefon...", ar: "بحث بالاسم أو الهاتف..." },
+        name: { de: "Name", ar: "الاسم" },
+        phone: { de: "Telefon", ar: "الهاتف" },
+        orders: { de: "Bestellungen", ar: "الطلبات" },
+        totalSpent: { de: "Gesamtausgaben", ar: "إجمالي الإنفاق" },
+        lastVisit: { de: "Letzter Besuch", ar: "آخر زيارة" },
+        exportCSV: { de: "CSV Export", ar: "تصدير CSV" },
+    },
+    // التقارير
+    reports: {
+        title: { de: "Berichte", ar: "التقارير" },
+        today: { de: "Heute", ar: "اليوم" },
+        thisWeek: { de: "Diese Woche", ar: "هذا الأسبوع" },
+        thisMonth: { de: "Dieser Monat", ar: "هذا الشهر" },
+        thisYear: { de: "Dieses Jahr", ar: "هذا العام" },
+        custom: { de: "Benutzerdefiniert", ar: "مخصص" },
+        revenueOverTime: { de: "Umsatz über Zeit", ar: "الإيرادات عبر الوقت" },
+        ordersByHour: { de: "Bestellungen nach Stunde", ar: "الطلبات حسب الساعة" },
+        topProducts: { de: "Top Produkte", ar: "أفضل المنتجات" },
+        orderTypes: { de: "Bestellungstypen", ar: "أنواع الطلبات" },
+        period: { de: "Zeitraum", ar: "الفترة" },
+        orders: { de: "Bestellungen", ar: "الطلبات" },
+        revenue: { de: "Umsatz", ar: "الإيرادات" },
+        avgOrder: { de: "Ø Bestellwert", ar: "متوسط الطلب" },
+        newCustomers: { de: "Neue Kunden", ar: "عملاء جدد" },
+    },
+    // الإعدادات
+    settings: {
+        title: { de: "Einstellungen", ar: "الإعدادات" },
+        info: { de: "Restaurant Info", ar: "معلومات المطعم" },
+        hours: { de: "Öffnungszeiten", ar: "ساعات العمل" },
+        delivery: { de: "Lieferung", ar: "التوصيل" },
+        payment: { de: "Zahlung", ar: "الدفع" },
+        notifications: { de: "Benachrichtigungen", ar: "الإشعارات" },
+        appearance: { de: "Erscheinungsbild", ar: "المظهر واللغة" },
+        language: { de: "Sprache", ar: "اللغة" },
+        theme: { de: "Design", ar: "المظهر" },
+        saved: { de: "Gespeichert", ar: "تم الحفظ" },
+        closed: { de: "Geschlossen", ar: "مغلق" },
+        deliveryEnabled: { de: "Lieferung aktivieren", ar: "تفعيل التوصيل" },
+        minOrder: { de: "Mindestbestellwert (€)", ar: "الحد الأدنى للطلب (€)" },
+        deliveryFee: { de: "Liefergebühr (€)", ar: "رسوم التوصيل (€)" },
+        deliveryTime: { de: "Geschätzte Lieferzeit", ar: "وقت التوصيل المتوقع" },
+        cashPayment: { de: "Bar bei Abholung", ar: "نقدي عند الاستلام" },
+        cardPayment: { de: "Kartenzahlung", ar: "دفع بالبطاقة" },
+        onlinePayment: { de: "Online bezahlen", ar: "دفع أونلاين" },
+        comingSoon: { de: "Bald verfügbar", ar: "قريباً" },
+        orderSound: { de: "Bestell-Ton", ar: "صوت الطلب" },
+        browserNotif: { de: "Browser-Benachrichtigungen", ar: "إشعارات المتصفح" },
+        whatsappNumber: { de: "WhatsApp Nummer", ar: "رقم واتساب" },
+        darkMode: { de: "Dunkelmodus", ar: "الوضع الليلي" },
+        lightMode: { de: "Hellmodus", ar: "الوضع النهاري" },
+    },
+    // عام
+    common: {
+        noData: { de: "Keine Daten vorhanden", ar: "لا توجد بيانات" },
+        loading: { de: "Laden...", ar: "جاري التحميل..." },
+        error: { de: "Fehler", ar: "خطأ" },
+        success: { de: "Erfolgreich", ar: "تم بنجاح" },
+    },
+} as const
+
+export type TranslationKey = keyof typeof translations
+export type SectionKey = keyof typeof translations
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function t(section: string, key: string, lang: Language): string {
+    const sectionData = (translations as Record<string, Record<string, { de: string; ar: string }>>)[section]
+    if (!sectionData) return key
+    const entry = sectionData[key]
+    if (!entry) return key
+    return entry[lang] || entry.de || key
+}
+
+export default translations
